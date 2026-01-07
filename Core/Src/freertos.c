@@ -19,18 +19,17 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "stm32f1xx.h"
-#include "stm32f1xx_hal_gpio.h"
 #include "task.h"
-#include "tim.h"
+#include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "nrf24.h"
 #include "spi.h"
+#include "stm32f1xx.h"
+#include "tim.h"
 
 /* USER CODE END Includes */
 
@@ -56,16 +55,16 @@
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityNormal,
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for nrf24Task */
 osThreadId_t nrf24TaskHandle;
 const osThreadAttr_t nrf24Task_attributes = {
-    .name = "nrf24Task",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t)osPriorityLow,
+  .name = "nrf24Task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,10 +78,10 @@ void StartNrf24Task(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
@@ -91,6 +90,10 @@ void MX_FREERTOS_Init(void) {
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
 
   /* USER CODE END Init */
 
@@ -112,8 +115,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle =
-      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of nrf24Task */
   nrf24TaskHandle = osThreadNew(StartNrf24Task, NULL, &nrf24Task_attributes);
@@ -125,6 +127,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -134,7 +137,8 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
+void StartDefaultTask(void *argument)
+{
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   (void)argument;
@@ -142,8 +146,8 @@ void StartDefaultTask(void *argument) {
   for (;;) {
     osDelay(100);
     // HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-    // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwmValue);
+    // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
+    // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwmValue);
     // pwmValue += 1;
     // if(pwmValue > 100) pwmValue = 0;
   }
@@ -157,7 +161,8 @@ void StartDefaultTask(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartNrf24Task */
-void StartNrf24Task(void *argument) {
+void StartNrf24Task(void *argument)
+{
   /* USER CODE BEGIN StartNrf24Task */
   /* Infinite loop */
   (void)argument;
@@ -186,34 +191,58 @@ y轴下 范围0-100； 接收侧收到数据x10，因为pwm分辨率是1000
     rx_len = NRF24_ReceiveData(rx_data, 4);
     if (rx_len > 0) {
 
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
       linking_timestamp = HAL_GetTick(); // 记录接收数据的时间戳
       // 接收到数据，通过串口发送出去
 
-      // if (rx_data[0] < 100) {
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
-      //                         (100 - rx_data[0]) * 10); // x轴舵机控制
-      // } else if (rx_data[0] > 100) {
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (rx_data[0] - 100) * 10);
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); // x轴舵机控制
-      // } else {
+      if (rx_data[0] < 100) {
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
+                              (100 - rx_data[0])); // x轴舵机控制
+      } else if (rx_data[0] > 100) {
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (rx_data[0] - 100));
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); // x轴舵机控制
+      } else {
 
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-      //   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); // x轴舵机控制
-      // }
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); // x轴舵机控制
+      }
 
       if (rx_data[1] < 100) {
         __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
         __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
-                              (100 - rx_data[1]) * 10); // y轴舵机控制
+                              (100 - rx_data[1])); // y轴舵机控制
       } else if (rx_data[1] > 100) {
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (rx_data[1] - 100) * 10);
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (rx_data[1] - 100));
         __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0); // y轴舵机控制
       } else {
 
         __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
         __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0); // y轴舵机控制
+      }
+
+      if (rx_data[2] < 100) {
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, (100 - rx_data[2]));
+      } else if (rx_data[2] > 100) {
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (rx_data[2] - 100));
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+      } else {
+
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+      }
+
+      if (rx_data[3] < 100) {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (100 - rx_data[3]));
+      } else if (rx_data[3] > 100) {
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, (rx_data[3] - 100));
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+      } else {
+
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
       }
 
       // 清空接收缓冲区
@@ -225,7 +254,7 @@ y轴下 范围0-100； 接收侧收到数据x10，因为pwm分辨率是1000
         // 重置电机
       }
     }
-    osDelay(100);
+    osDelay(1);
   }
   /* USER CODE END StartNrf24Task */
 }
@@ -234,3 +263,4 @@ y轴下 范围0-100； 接收侧收到数据x10，因为pwm分辨率是1000
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
