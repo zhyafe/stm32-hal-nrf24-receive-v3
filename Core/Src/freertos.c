@@ -203,7 +203,7 @@ y轴下 范围0-100； 接收侧收到数据x10，因为pwm分辨率是1000
 
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, SET);
 
-  uint8_t carType = 1; // 0-翻斗车 1-装载机 2-挖掘机
+  uint8_t carType = 2; // 0-翻斗车 1-装载机 2-挖掘机
 
   uint32_t linking_timestamp = 0;
   for (;;) {
@@ -304,6 +304,84 @@ y轴下 范围0-100； 接收侧收到数据x10，因为pwm分辨率是1000
       挖掘机
       */
       if (carType == 2) {
+        /**
+        通道1： 旋转
+        通道2： 小臂
+        通道3： 挖斗
+        通道4： 大臂
+        通道5： 左轮
+        通道6： 右轮
+        */
+        if (rx_data[0] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (100 - rx_data[0]));
+        } else if (rx_data[0] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (rx_data[0] - 100));
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+        } else {
+
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+        }
+
+        if (rx_data[1] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, (100 - rx_data[1]));
+        } else if (rx_data[1] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (rx_data[1] - 100));
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
+        } else {
+
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
+        }
+
+        if (rx_data[2] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, (100 - rx_data[2]));
+        } else if (rx_data[2] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (rx_data[2] - 100));
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+        } else {
+
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);
+        }
+
+        if (rx_data[3] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (100 - rx_data[3]));
+        } else if (rx_data[3] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, (rx_data[3] - 100));
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+        } else {
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+        }
+
+        if (rx_data[4] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (100 - rx_data[4]));
+        } else if (rx_data[4] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (rx_data[4] - 100));
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+        } else {
+
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+        }
+
+        if (rx_data[5] < 100) {
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, (100 - rx_data[5]));
+        } else if (rx_data[5] > 100) {
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, (rx_data[5] - 100));
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+        } else {
+
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+        }
       }
 
       // 清空接收缓冲区
